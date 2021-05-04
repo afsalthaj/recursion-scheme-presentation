@@ -291,7 +291,7 @@ def getUserWithRetry(initialDelay: FiniteDuration, max: Int): User
 
                                         <!-- Slide -->
           <section data-transition="fade-out">
-            <h3>A function takes a program returning another program that retries</h3>
+            <h3>Takes a program, and returns another program</h3>
             <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim data-noescape>
           
             def resilientPgm(nonResilientPgm: IO[A]): IO[A] = ??? 
@@ -303,7 +303,7 @@ def getUserWithRetry(initialDelay: FiniteDuration, max: Int): User
 
                                         <!-- Slide -->
           <section data-transition="fade-out">
-            <h3>A function takes a program returning another program is optimised</h3>
+            <h3>Takes a program, and returns another program</h3>
             <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim data-noescape>
           
             def optimiseProgram(nonOptimisedPgm: IO[A]): IO[A] = ??? 
@@ -462,8 +462,7 @@ def getUserWithRetry(initialDelay: FiniteDuration, max: Int): User
         <section data-transition="fade-out">
           <h3>And if you are doing complex enough, recurion schemes become important enough</h3>
           <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-trim data-noescape>
-            // Scio, Beam
-            val pgm = Beam[A]
+            // Scio, Beam, Flink, Spark and many more
             def interpret(dsl: Dsl[A]): IO[spark.DataFrame[A]]
             def interpret(dsl: Dsl[A]): IO[flink.DataSet[A]]
          </code></pre>
@@ -471,7 +470,7 @@ def getUserWithRetry(initialDelay: FiniteDuration, max: Int): User
         
 
         <section data-transition="fade-out">
-          <h3>Try not delay abstractions</h3>
+          <h3>Try not to delay abstractions</h3>
           <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-trim data-noescape>
             
             Let's keep it simple <=> 
@@ -579,7 +578,7 @@ def getUserWithRetry(initialDelay: FiniteDuration, max: Int): User
         </section>
 
         <section data-transition="fade-out">
-          <h3>Push towards Scala3</h3>
+          <h3>Push a bit more towards Scala3</h3>
           <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-trim data-noescape>
 // Caution: It's relatively non-intuitive to implement
 // And deviates a bit from https://mvanier.livejournal.com/2897.html
@@ -614,7 +613,7 @@ def factorial: Int => Int = y(almostFactorial)
                 </section>
 
                 <section data-transition="fade-out">
-                  <h3>This is Live and it happened (not a made up story)</h3>
+                  <h3>Here is a simple, yet, fragile example</h3>
                   <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-trim>
                     s3://bucket/prefix/partition=2011-09-08/version=1/run_time=22222
                     s3://bucket/prefix/version=1/partition=2011-09-08/run_time=22222
@@ -625,7 +624,7 @@ def factorial: Int => Int = y(almostFactorial)
                 </section>
 
                 <section data-transition="fade-out">
-                  <h3>This is Live and it happened (not a made up story)</h3>
+                  <h3>Here is a simple, yet, fragile example</h3>
                   <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-trim>
                     s3://bucket/prefix/partition=2011-09-08/version=1/run_time=22222
                     s3://bucket/prefix/version=1/partition=2011-09-08/run_time=22222
@@ -635,7 +634,7 @@ def factorial: Int => Int = y(almostFactorial)
                 </section>
               
                 <section data-transition="fade-out">
-                  <h3>This is Live and it happened (not a made up story)</h3>
+                  <h3>Here is a simple, yet, fragile example</h3>
                   <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-trim>
                     sealed trait Component
 
@@ -654,7 +653,7 @@ def factorial: Int => Int = y(almostFactorial)
                 </section>
 
                 <section data-transition="fade-out">
-                  <h3>Well, a naive show</h3>
+                  <h3>Well, a naive show (toString)</h3>
                   <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-trim>
                     final case class Path(current: Component, next: Option[Path]) {
                       def show: current match {
@@ -671,7 +670,7 @@ def factorial: Int => Int = y(almostFactorial)
                 </section>
                 
                 <section data-transition="fade-out">
-                  <h3>Well, a compilable atto</h3>
+                  <h3>Beautiful Parser</h3>
                   <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-trim>
                       val allParsers: List[Parser[Component]] =
                         List(getParser(partitionName)), 
@@ -681,7 +680,7 @@ def factorial: Int => Int = y(almostFactorial)
                 </section>
                 
               <section data-transition="fade-out">
-                <h3>Such a simple Parser</h3>
+                <h3>Beautiful Parser</h3>
                 <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-trim>
                   import atto._, Atto._
 
@@ -704,21 +703,21 @@ def factorial: Int => Int = y(almostFactorial)
               </section>
                 
               <section data-transition="fade-out">
-                <h3>Ok, find out the s3 directories are having homogenous structure</h3>
+                <h3>Ok, find out if s3 paths are having homogenous structure ?</h3>
                 <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-trim>
                   Defintion of homogenous here:
-                  1. Position of a type its name should be same across all paths
+                  1. Position of a type and its name should be same across all paths
                   
                   2. Did it ever become heterogenous? 
                   Yes, a table/data became versionised after 2019.
 
                   3. Is it a bug in the source? 
-                  No, sorry, we are running this for years. So expect it!
+                  No, we are running this for years. So we expect it.
                </code></pre>
               </section>  
 
               <section data-transition="fade-out">
-                <h3>Ok, run the above structure for latest data</h3>
+                <h3>Process the latest directory</h3>
                 <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-trim>
                   Pick the latest partition if it exists, to find the latest version.
                   If version comes first, pick the latest version, to then find the latest partition
@@ -730,7 +729,8 @@ def factorial: Int => Int = y(almostFactorial)
                 <h3>Sure, what's the intuition?</h3>
                 <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-trim>
                   Here is the question.
-                  Log the position of these components, but don't pollute your business domain.
+                  Keep track of the position of these components, but don't pollute your business domain.
+                  Challenge is to keep the minimum products and co-products
                </code></pre>
               </section>
               
@@ -968,7 +968,7 @@ def factorial: Int => Int = y(almostFactorial)
 
 
               <section data-transition="fade-out">
-                <h3>Show path</h3>
+                <h3>Show path (See the pattern)</h3>
                 <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim>
                  def combine[V](a: (V, Name), b: Option[String]): String = ???
               
@@ -985,7 +985,7 @@ def factorial: Int => Int = y(almostFactorial)
               </section>
 
               <section data-transition="fade-out">
-                <h3>For the above logic to work (just details)</h3>
+                <h3>(Details)For the above logic to work</h3>
                 <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim>
     
                 // PathA should have a Traverse instance, and this is fairly straight forward
@@ -1147,26 +1147,17 @@ def readNode2(id: Int): ConnectionIO[ProfF[ProfF[Int]]] =
             <section data-transition="fade-out">
               <h3>Is that recursion scheme ?</h3>
               <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim>
-                // I think, not reaaally. But now I am hoping
-                // a few of you are motivated to learn a few technical terms that are the following
+                // I think, not reaaally. But now I am hoping,
+                // atleast a few of you are motivated. Now, its time to find the mechanics and make it working.
                 1. Catamorphism :: Algebra[F[_], A] => A // We already seen this, bottom up folding of structure
                 2. cataM type Algebra[F[_], A] = F[A] => M[A], wher M can be Either[String, *]
                 3. Anamorphism: top botton unfold
-                4. Paramorphism: SImilar to cata.
-                5. Ofcourse, get so used to Free, and Cofree
+                4. Paramorphism: Similar to cata.
+                5. Ofcourse, get so used to Free, and Cofree, Mu and many many more possibilites.
 
              </code></pre>
             </section>
-
-
-
-            <section data-transition="fade-out">
-              <h3>Interesting talks</h3>
-              <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim>
-                Hope you enough motivations to Read more on it....
-
-             </code></pre>
-            </section>
+            
       <section data-transition="fade-in">
         <h3>Thank you all</h3>
       </section>
