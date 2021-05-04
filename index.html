@@ -953,6 +953,7 @@ def factorial: Int => Int = y(almostFactorial)
                  type Structure = List[(Int, String)]
                  val inclusion: Eval ~> cats.Id = _.value
                  val res = parser("minor_version=3/run_time=1/abc.txt")
+                 def combine(a: (Int, String), b: Option[Structure]): Structure =
               
                  // path.next is Structure, and not child path.
                   Cofree.cataM(parsed)(
@@ -967,25 +968,43 @@ def factorial: Int => Int = y(almostFactorial)
 
 
               <section data-transition="fade-out">
-                <h3>A very reliable show</h3>
+                <h3>A simple naive string, looking just the same as before</h3>
                 <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim>
                  type Structure = List[(Int, String)]
                  val inclusion: Eval ~> cats.Id = _.value
                  val res = parser("minor_version=3/run_time=1/abc.txt")
+                 def combine[V](a: (V, Name), b: Option[String]): String = ???
               
                  // path.next is Structure, and not child path.
-                  Cofree.cataM(parsed)(
-                    (pos, path) =>
-                      path.current match {
-                        case Version(name, _) => combine((pos, name), path.next) 
-                        case RunTime(name, _) => combine((pos, name), path.next)
-                      }
-                  )(inclusion) 
+                 Cofree.cataM[PathA, Id, Int, String](parsed)(
+                  (_, fb) =>
+                    fb.current match {
+                      case Version(n, v) => combine((v, n), fb.next)
+                      case RunTime(n, v) => combine((v, n), fb.next)
+                      case Adhoc(n, v)   => combine((v, n), fb.next)
+                    }
+                )(inclusion)
                </code></pre>
               </section>
 
               <section data-transition="fade-out">
-                <h3>We avoid a few mechanics behind it</h3>
+                <h3>For the above logic to work (just details)</h3>
+                <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim>
+    
+                // PathA should have a Traverse instance, and this is fairly straight forward
+                implicit val traversePathA: Traverse[PathA] = new Traverse[PathA] {
+                  def traverse[G[_]: Applicative, A, B](fa: PathA[A])(f: A => G[B]): G[PathA[B]] = {
+                    fa.next.map(f).fold(PathA(fa.current, None).pure[G]){ value =>
+                      Applicative[G].map(value)(a => PathA(fa.current, Some(a)))
+                    }
+                  }
+                }
+
+               </code></pre>
+              </section>
+
+              <section data-transition="fade-out">
+                <h3>Let's solve one more example.</h3>
                 <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim>
     
                 // Our original example of Multiply to Square
@@ -1038,6 +1057,21 @@ def mulToSquare(expr: Fix[Expr]): Fix[Expr] = expr.project match {
                  
                </code></pre>
               </section>
+
+            </section>
+
+
+            <section data-transition="fade-out">
+              <h3>Map it to your recursive database table</h3>
+              <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim>
+
+def mulToSquare(expr: Fix[Expr]): Fix[Expr] = expr.project match {
+case Multiply(a, b) if (a == b) => Square(a)
+case other => other
+}
+      
+             </code></pre>
+            </section>
 
       <section data-transition="fade-in">
         <h3>Thank you all</h3>
