@@ -719,8 +719,12 @@ def factorial: Int => Int = y(almostFactorial)
               <section data-transition="fade-out">
                 <h3>Process the latest directory</h3>
                 <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-trim>
-                  Pick the latest partition if it exists, to find the latest version.
-                  If version comes first, pick the latest version, to then find the latest partition
+                  If partition exists first, pick the latest version (if it exists) under the latest partition.
+                  If runtime exists, pick the latest run_time under a latest version.
+                  Or version exists first, pick the latest partition (if it exists) under the latest version.
+                  If runtime exists, pick the latest run_time under a latest partition.
+                  Permute of all of the above.
+                  // Side note (unrelated): Do it with streaming, without taking all of the paths into memory.
                </code></pre>
               </section>
 
