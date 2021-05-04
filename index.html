@@ -460,7 +460,7 @@ def getUserWithRetry(initialDelay: FiniteDuration, max: Int): User
         </section>
 
         <section data-transition="fade-out">
-          <h3>And if you are doing complex enough, recurion schemes become important enough</h3>
+          <h3>Complex recursions, should be, factored out</h3>
           <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-trim data-noescape>
             // Scio, Beam, Flink, Spark and many more
             def interpret(dsl: Dsl[A]): IO[spark.DataFrame[A]]
@@ -1114,6 +1114,15 @@ def insert(op: Option[Int], p: ProfF[_]): ConnectionIO[Int] =
              </code></pre>
             </section>
 
+
+            <section data-transition="fade-out">
+              <h3>Read it back </h3>
+              <li>Doing recursion at sql level is a choice for performance</li>
+              <li>But not all usecases need to take that risk</li>
+              <li>A recursion can be complex</li>
+              <li>Should be backed by compile time safety</li>
+              <li>Remove it from unsafe place, if performance concern is a lie</li>
+            </section>
 
 
 
