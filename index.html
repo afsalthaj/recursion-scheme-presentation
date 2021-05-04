@@ -1150,16 +1150,17 @@ def readNode2(id: Int): ConnectionIO[ProfF[ProfF[Int]]] =
                 // I think, not reaaally. But now I am hoping,
                 // atleast a few of you are motivated. Now, its time to find the mechanics and make it working.
                 1. Catamorphism :: Algebra[F[_], A] => A // We already seen this, bottom up folding of structure
-                2. cataM type Algebra[F[_], A] = F[A] => M[A], wher M can be Either[String, *]
-                3. Anamorphism: top botton unfold
-                4. Paramorphism: Similar to cata.
+                2. cataM        ::  Algebra[F[_], A] = F[A] => M[A], wher M can be Either[String, *]
+                3. Anamorphism  :: top bottom unfold
+                4. Paramorphism :: Similar to cata.
                 5. Ofcourse, get so used to Free, and Cofree, Mu and many many more possibilites.
 
              </code></pre>
             </section>
             
       <section data-transition="fade-in">
-        <h3>Thank you all</h3>
+        <h4>That was 40 free occurrences of word "recursion"</h4>
+        <h4> Thanks </h3>
       </section>
 
       <!-- Slide 20 -->
