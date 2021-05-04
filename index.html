@@ -903,14 +903,17 @@ def factorial: Int => Int = y(almostFactorial)
                 <h3>Get (Fix/Co) Free, avoid more data (&) manipulations</h3>
                 <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim>
 
-                 // Our path never just, and infact it is just non recursive
+                 // Our path exists non recursively forever
                  case class PathA[A](current: Component, next: Option[A])
                  
-                 // Our recursive path is, always,
+                 // Our recursive path is, always
                  type Path = Fix[PathA]
 
-                 // Our recursive path is, always
+                 // Our recursive path with location is always
                  type PathLoc = Cofree[PathA, Loc]
+
+                 // These three heavy lifting structures avoids duplications and manipulations
+                 // that can be hurfully buggy.
            
                </code></pre>
               </section>
