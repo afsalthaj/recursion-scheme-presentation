@@ -1,0 +1,1112 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <title>reveal.js</title>
+
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/reveal.css">
+  <link rel="stylesheet" href="css/theme/moon.css">
+
+  <!-- Theme used for syntax highlighting of code -->
+  <link rel="stylesheet" href="lib/css/atom-one-dark.css">
+
+
+  <!-- Printing and PDF exports -->
+  <script>
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match(/print-pdf/gi) ? 'css/print/pdf.css' : 'css/print/paper.css';
+    document.getElementsByTagName('head')[0].appendChild(link);
+
+  </script>
+</head>
+
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <!-- Heading section -->
+      <section data-markdown>
+        <textarea data-template>
+            ## Recursion - 
+            #### schemes
+	      </textarea>
+      </section>
+
+      <!-- Slide 2 -->
+      <section data-transition="fade-in">
+        <h3>Why ? </h3>
+        <ul style="font-size:35px">
+          <li>Push yourself a bit more, you get comfortable with where you begun</li>
+          <li>We try to learn abstractions</li>
+          <li>We try to learn recursions</li>
+          <li>We push a bit more</li>
+          <li>Learn abstracting recursions</li>
+          <li>Get used to recursion and abstraction</li>
+	  <li>A map reduce can be implemented using Monoid(reliably coz of laws)</li>
+	  <li>A sum of head and tail is head + sum(tail) and not loop (..) sum = sum + head</li>
+        </ul>
+        <p style="font-size:35px">Content based on my experimentations with Scala3 in
+          <span style='color:maroon'> https://github.com/afsalthaj/scala3-generic </span>
+        </p>
+      </section>
+
+
+      <!-- Slide 3 -->
+
+      <section data-transition="fade-in">
+        <h3>Recursion Example</h3>
+        <ul>
+          <li>We have seen recurions quite a bit</li>
+          <li>A usual recursion that sums your list</li>
+          <li>A recursion that is at type level</li>
+	  <li> We have seen some typelevel in my last talk on scala3 </li>
+        </ul>
+      </section>
+
+ 
+      <!-- Slide 18 -->
+
+      <section data-transition="fade-out">
+        <h3>Type Matching</h3>
+        <pre><code class="hljs scala" style="font-size:22px;" data-trim data-trim data-line-numbers="1-10">
+          type TupleMap[T <: Tuple, F[_]] <: Tuple = T match {
+            case EmptyTuple => EmptyTuple
+            case h *: t => F[h] *: TupleMap[t, F]
+          }
+        </code></pre>
+      </section>
+
+
+      <!-- Slide -->
+      <section data-transition="fade-out">
+        <h3>Type Matching in Action</h3>
+        <pre><code class="hljs scala" style="font-size:22px;" data-trim>
+          type ISD = (Int, Double, Long)
+          val result: TupleMap[ISD, Option] = (Some(1), Some("2"), Some("3"))
+          // Same as val result: (Option[Int], Option[Double], Option[String]
+        </code></pre>
+      </section>
+
+      <!-- Slide -->
+      <section data-transition="fade-out">
+        <h3>Type Matching in Action. Hmm...</h3>
+        <pre><code class="hljs scala" style="font-size:22px;" data-trim>
+          // Question: Implement a sequence function such that `result` compiles
+
+          val result: Option[ISD] = 
+            sequence((Some(1), Some("2"), Some("3")))
+          
+          def sequence[T <: Tuple](t: T): ??? = ???
+          // Hint: First define an inverse of `TupleMap`
+        </code></pre>
+      </section>
+
+      <!-- Slide -->
+      <section data-transition="fade-out">
+        <h3>Tuple Inverse Map</h3>
+        <pre><code class="hljs scala" style="font-size:22px;" data-trim>
+          type TupleInverseMap[T, F[_]] <: Tuple = T match {
+            case EmptyTuple => EmptyTuple
+            case F[h] *: t => h *: TupleInverseMap[t, F]
+          }        
+        </code></pre>
+      </section>      
+
+
+      <!-- Slide -->
+      <section data-transition="fade-out">
+        <h3>Watch out for bad-looking code..</h3>
+      </section>
+
+      <!-- Slide -->
+      <section data-transition="fade-out">
+        <h3>Return type is computed (recursively)</h3>
+        <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-line-numbers="1" data-trim data-noescape>  
+          def unsafeSequence[T <: Tuple](x: T): Option[TupleInverseMap[T, Option]] = {
+            val tupleUnwrapped: Array[Any] = 
+              x.productIterator.collect { case Some(v) => v }.toArray
+
+            if x.productArity == tupleUnwrapped.length then 
+              Some(Tuple.fromArray(tupleUnwrapped).asInstanceOf[TupleInverseMap[T, Option]]) 
+            else None
+          }
+  
+       </code></pre>
+      </section>
+
+      <!-- Slide -->
+      <section data-transition="fade-out">
+        <h3>Return type is computed (recursively)</h3>
+        <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-trim data-noescape>  
+          def unsafeSequence[T <: Tuple](x: T): Option[TupleInverseMap[T, Option]] =
+            val tupleUnwrapped: Array[Any] = 
+              x.productIterator.collect { case Some(v) => v }.toArray
+
+            if x.productArity == tupleUnwrapped.length then 
+              Some(Tuple.fromArray(tupleUnwrapped)
+                .asInstanceOf[TupleInverseMap[T, Option]]) 
+            else None
+
+          // Demo
+  
+       </code></pre>
+      </section>
+
+       
+      <!-- Slide -->
+      <section data-transition="fade-out">
+        <h3>An intentionally long loop to explain something simple</h3>
+        <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-trim data-noescape> 
+	  sum :: List Int -> Int
+	  sum Nil = 0
+	  sum h :. t = h + sum tail 
+	  // Doesn't work in scala coz it needs to be tail recursion, but we don't care
+       </code></pre>
+      </section>
+
+      <!-- Slide -->
+      <section data-transition="fade-out">
+        <h3>Singleton types</h3>
+        <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-trim data-noescape>
+          import scala.compiletime.S
+
+          val one: S[0] = 1
+       </code></pre>
+      </section>      
+
+        <!-- Slide -->
+        <section data-transition="fade-out">
+          <h3>Implement Bound Using Singleton + Type matching</h3>
+          <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-trim data-noescape>
+            Given compiletime.S, and singleton type,
+            Define a type `Bound[Min, Max]` such that 
+            val x: Bound[1, 10] = 11 
+            fails to compile
+         </code></pre>
+        </section>    
+
+        <!-- Slide -->
+        <section data-transition="fade-out">
+          <h3>Implement Bound Using Singleton + Type matching</h3>
+          <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-trim data-noescape>
+            type Bound[Min <: Int, Max <: Int] <: Int = Max match {
+              case Min => Min
+              case S[m] => Max | Bound[Min, m]
+            }
+            // Demo
+         </code></pre>
+        </section> 
+                <!-- Slide -->
+
+        <section data-transition="fade-out">
+          <h3>So far we covered</h3>
+          <pre><code class=" hljs sql" style="font-size:25px; align-items: center;"  data-line-numbers="3" data-trim data-noescape>
+            Type matching
+            Singleton types
+            Polymorphic Function Types
+            Type-class derivation using scala3 Tuple
+            Reimplementing some scala3 functions
+            Compile time Mirror
+            Type-class derivation revisited
+            Inline, and transparent
+            Macros
+         </code></pre>
+        </section>   
+              <!-- Slide -->
+
+        <section data-transition="fade-out">
+          <h3>Polymorphic function types</h3>
+          <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+  // A method
+  def identity[A](a: A): A = a
+            
+  val identity: [A] => (A => A) = ??? // ~ Compile Error in Scala2
+         </code></pre>
+        </section>
+
+                <!-- Slide -->
+
+        <section data-transition="fade-out">
+          <h3>Rank-n in Scala 2</h3>
+          <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+            
+  // Scala2 fails to compile
+   def rank[A, B, C](a: (B, C), id: A => A): (B, C)) = 
+      (id(a._1), id(a._2))
+         </code></pre>
+        </section>
+
+
+
+                <!-- Slide -->
+
+                <section data-transition="fade-out">
+                  <h3>Rank n in Scala3</h3>
+                  <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-trim>
+        
+          // A scala3 solution
+          def rank[B, C](a: (B, C), id: [A] => A => A): (B, C) = 
+            (id(a._1), id(a._2))
+                 </code></pre>
+                </section>
+                
+                <!-- Slide -->
+
+                <section data-transition="fade-out">
+                  <h3>Question: Make it compile in Scala2</h3>
+                  <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-trim>                  
+                    // Scala2 fails to compile the following
+                     def rank[A, B, C](a: (B, C), id: A => A): (B, C)) = 
+                       (id(a._1), id(a._2))
+                   </code></pre>
+
+                </section>                     
+        
+                <!-- Slide -->
+
+        <section data-transition="fade-out">
+          <h3>Answer: Make it compile in Scala2</h3>
+          <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+  // A scala2 solution
+  trait IdentityFn {
+    def apply[A](value: A): A = value
+  }
+
+  def rank[B, C](a: (B, C), identityFn: IdentityFn): (B, C) = 
+    (identityFn(a._1), identityFn(a._2))
+         </code></pre>
+        </section>
+
+                <!-- Slide -->
+
+        <section data-transition="fade-out">
+          <h3>Answer: Make it compile in Scala2</h3>
+          <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+  // A scala2 solution
+  trait ~>[F[_], G[_]] {
+    def apply[A](value: F[A]): G[A]
+  }
+
+  def rank[B, C](a: (B, C), identityFn: Id ~> Id): (B, C) = 
+    (identityFn(a._1), identityFn(a._2))
+         </code></pre>
+        </section>
+
+                <!-- Slide -->
+
+        <section data-transition="fade-out">
+          <h3>With that, Implement Tuple map in Scala3</h3>
+          <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+
+// pseudo code            
+val tuple = (1, 2)
+
+val tuple2: (Option[Int], Option[Int]) = tuple.map(???)
+
+         </code></pre>
+        </section>
+
+                <!-- Slide -->
+
+        <section data-transition="fade-out">
+          <h3>Extension</h3>
+          <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+
+  extension[A <: Tuple](a: A) {
+    def map[F[_]](f: [A] => A => F[A]): TupleMap[A, F] = 
+      TupleOps.map[A, F](a, f)
+  }
+
+         </code></pre>
+        </section>
+
+                <!-- Slide -->
+
+        <section data-transition="fade-out">
+          <h3>Back to TupleMap :)</h3>
+          <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+object Tuple:
+  def mapNonInferred[A <: Tuple, F[_]](
+    a: A, f: [A] => A => F[A]
+  ): TupleMap[A, F] = 
+    Tuple.fromArray(a.productIterator.map(a => f(a)).toArray)
+      .asInstanceOf[TupleMap[A, F]] // :(
+         </code></pre>
+        </section>
+   
+                        <!-- Slide -->
+
+        <section data-transition="fade-out">
+          <h3>So far we covered</h3>
+          <pre><code class=" hljs sql" style="font-size:25px; align-items: center;"  data-line-numbers="4" data-trim data-noescape>
+            Type matching
+            Singleton types
+            Polymorphic Function Types
+            Type-class derivation using scala3 Tuple
+            Reimplementing some scala3 functions
+            Compile time Mirror
+            Type-class derivation revisited
+            Inline, and transparent
+            Macros
+         </code></pre>
+        </section>         
+
+
+                <!-- Slide -->
+
+        <section data-transition="fade-out">
+          <h3>Generic</h3>
+          <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+// Derive B and then work with B (derive instances for B, which is Tuple)           
+trait Generic[A, B] {
+  def to(a: A): B
+  def from(a: B): A
+}            
+         </code></pre>
+        </section>
+
+                <!-- Slide -->
+
+        <section data-transition="fade-out">
+          <h3>Generic</h3>
+          <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+  // We will see Mirror later. But there exist implicit proof for Mirror[A]      
+  given genericOfA[A <: Product](
+    using P: Mirror.ProductOf[A]
+ ): Generic[A, P.MirroredElemTypes] = 
+    new Generic[A] {
+      def to(a: A): P.MirroredElemTypes = Tuple.fromProductTyped(a)
+      def from(a: P.MirroredElemTypes) = P.fromProduct(a)
+    }
+  }            
+         </code></pre>
+        </section>
+
+                <!-- Slide -->
+
+        <section data-transition="fade-out">
+          <h3>Derive for EmptyTuple Equal</h3>
+          <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+  given Equal[EmptyTuple] with {
+    override def eq(a: EmptyTuple, b: EmptyTuple): Boolean =
+      true
+  }                      
+         </code></pre>
+        </section>
+
+                <!-- Slide -->
+
+        <section data-transition="fade-out">
+          <h3>Derive for NonEmptyTuple</h3>
+          <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+  given eqNonEmptyTuple[A, T <: Tuple](
+    using A1: Equal[A], 
+    A2: Equal[T]
+  ): Equal[A *: T] =
+    (a: A *: T, b: A *: T) = (a, b) match {
+      case (h *: t, h1 *: t1) =>
+        Equal[A].eq(h, h1) && Equal[T].eq(t, t1)
+    }                  
+         </code></pre>
+        </section>
+                 <!-- Slide -->
+      
+        <section data-transition="fade-out">
+          <h3>Derive for A</h3>
+          <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+  given eqA[A, Repr <: Tuple](
+    using G: Generic[A, Repr], 
+    ReprEq: Equal[Repr]
+ ): Equal[A] = 
+    (a: A, b: A) = ReprEq.eq(G.to(a), G.to(b))
+         </code></pre>
+        </section>
+        
+                <!-- Slide -->
+
+        <section data-transition="fade-out">
+          <h3>But..</h3>
+          <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+// That representation works, until someone "only" needs `B`
+final case class Abc(a: String, b: Int)
+
+Equal[Abc].equal(Abc("a", 1), Abc("b", 2)) // Works
+
+// But ?
+summon[Generic[A, ???]].to(Abc("a", 1))        
+         </code></pre>
+        </section>
+
+                <!-- Slide -->
+
+        <section data-transition="fade-out">
+          <h3>Fix Generic</h3>
+          <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+trait Generic[A] {
+  type Repr
+  def to(a: A): Repr
+  def from(a: Repr): A
+}
+
+object Generic {
+  type Aux[A, B] = Generic[A] { type Repr = B }
+}
+
+// Use Generic.Aux[A, B] where type info need to be propagated
+given forA[A](using P: ProductOf[A]): Generic.Aux[A, P.MirroredElemTypes] = new Generic[A] {..}
+summon[Generic[A]].to(Abc("a", 1)) // ("a", 1) : (String, Int)
+
+         </code></pre>
+        </section>        
+        
+  <!-- Slide -->
+        <section data-transition="fade-out">
+          <h3>So far we covered</h3>
+          <pre><code class=" hljs sql" style="font-size:25px; align-items: center;"  data-line-numbers="5" data-trim data-noescape>
+            Type matching
+            Singleton types
+            Polymorphic Function Types
+            Type-class derivation using scala3 Tuple
+            Reimplementing some scala3 functions
+            Compile time Mirror
+            Type-class derivation revisited
+            Inline, and transparent
+            Macros
+         </code></pre>
+        </section>    
+             
+
+  <!-- Slide 5 -->
+  <section data-transition="fade-out">
+    <h3>Implement sequence</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+// Reimplement sequence, but don't use asInstanceOf, yet allow scala to infer types.
+// Hint:
+def sequence[A](a: F[G[A]]): G[F[A]] = 
+  a traverse identity
+
+   </code></pre>
+  </section> 
+
+  <!-- Slide 5 -->
+  <section data-transition="fade-out">
+    <h3>Implement sequence</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+// Reimplement sequence, but don't use asInstanceOf
+def sequence[A](a: TupleMap[A, F]): F[TupleInverseMap[TupleMap[A, F], F]] = 
+  a traverse identity
+
+   </code></pre>
+  </section> 
+  
+  <!--Slide-->
+  <section data-transition="fade-out">
+    <h3>Implement Map</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+      // Implement being able to map a tuple. Try not to copy paste shapeless.
+      trait MapperF[F[_], A] {
+        type Out <: Tuple
+        def apply(a: A): F[Out]
+      } // type Aux[A, B] = Mapper[A] { type Out = B }
+
+      trait Case[A] {
+        type Out
+        def apply(a: A): Out
+      } // type Aux[A, B] = Case[A] { type Out = B }
+
+   </code></pre>
+  </section>
+  
+  <!--Slide-->
+  <section data-transition="fade-out">
+    <h3>Instance for Mapper for all tuple</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+ given emptyMap[F[_]](
+   using M: Applicative[F]
+ ): MapperF.Aux[F, EmptyTuple, EmptyTuple] =
+   _ => M.pure(EmptyTuple)
+
+   </code></pre>
+  </section> 
+
+  <!--Slide-->
+  <section data-transition="fade-out">
+    <h3>Instance for Mapper for all tuple</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-line-numbers="2">
+  given  nonEmptyTuple[F[_], A, B, Tail <: Tuple](
+    using C: Case.Aux[A, F[B]], 
+    M: MapperF[F, Tail]
+  )(using MF: Monad[F]): MapperF.Aux[F, A *: Tail, B *: M.Out] = 
+    new MapperF[F, A *: Tail] {
+      type Out = B *: M.Out
+      def apply(a: A *: Tail): F[Out] =
+        MF.flatMap(C.apply(a.head))(bb => MF.map(M.apply(a.tail))(mOut => bb *: mOut))
+   }
+
+   </code></pre>
+  </section>   
+
+  <!--Slide-->
+  <section data-transition="fade-out">
+    <h3>Instance for Mapper for all tuple</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-line-numbers="3">
+  given  nonEmptyTuple[F[_], A, B, Tail <: Tuple](
+    using C: Case.Aux[A, F[B]], 
+    M: MapperF[F, Tail]
+  )(using MF: Monad[F]): MapperF.Aux[F, A *: Tail, B *: M.Out] = 
+    new MapperF[F, A *: Tail] {
+      type Out = B *: M.Out
+      def apply(a: A *: Tail): F[Out] =
+        MF.flatMap(C.apply(a.head))(bb => MF.map(M.apply(a.tail))(mOut => bb *: mOut))
+   }
+
+   </code></pre>
+  </section>
+  
+  <!--Slide-->
+  <section data-transition="fade-out">
+    <h3>Instance for Mapper for all tuple</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-line-numbers="4">
+  given  nonEmptyTuple[F[_], A, B, Tail <: Tuple](
+    using C: Case.Aux[A, F[B]], 
+    M: MapperF[F, Tail]
+  )(using MF: Monad[F]): MapperF.Aux[F, A *: Tail, B *: M.Out] = 
+    new MapperF[F, A *: Tail] {
+      type Out = B *: M.Out
+      def apply(a: A *: Tail): F[Out] =
+        MF.flatMap(C.apply(a.head))(bb => MF.map(M.apply(a.tail))(mOut => bb *: mOut))
+   }
+
+   </code></pre>
+  </section> 
+  
+  <!--Slide-->
+  <section data-transition="fade-out">
+    <h3>Instance for Mapper for all tuple</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-line-numbers="5">
+  given  nonEmptyTuple[F[_], A, B, Tail <: Tuple](
+    using C: Case.Aux[A, F[B]], 
+    M: MapperF[F, Tail]
+  )(using MF: Monad[F]): MapperF.Aux[F, A *: Tail, B *: M.Out] = 
+    new MapperF[F, A *: Tail] {
+      type Out = B *: M.Out
+      def apply(a: A *: Tail): F[Out] =
+        MF.flatMap(C.apply(a.head))(bb => MF.map(M.apply(a.tail))(mOut => bb *: mOut))
+   }
+
+   </code></pre>
+  </section>
+  
+  
+      <!--Slide-->
+  <section data-transition="fade-out">
+    <h3>Instance for Mapper for all tuple</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-line-numbers="6,7,8,9,10,11">
+  given  nonEmptyTuple[F[_], A, B, Tail <: Tuple](
+    using C: Case.Aux[A, F[B]], 
+    M: MapperF[F, Tail]
+  )(using MF: Monad[F]): MapperF.Aux[F, A *: Tail, B *: M.Out] = 
+    new MapperF[F, A *: Tail] {
+      type Out = B *: M.Out
+      def apply(a: A *: Tail): F[Out] =
+        MF.flatMap(C.apply(a.head))(bb => MF.map(M.apply(a.tail))(mOut => bb *: mOut))
+   }
+
+   </code></pre>
+  </section> 
+
+
+      <!--Slide-->
+  <section data-transition="fade-out">
+    <h3>Instance for Mapper for all tuple</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;" data-line-numbers="6,7,8,9,10,11">
+  given  nonEmptyTuple[F[_], A, B, Tail <: Tuple](
+    using C: Case.Aux[A, F[B]], 
+    M: MapperF[F, Tail]
+  )(using MF: Monad[F]): MapperF.Aux[F, A *: Tail, B *: M.Out] = 
+    new MapperF[F, A *: Tail] {
+      type Out = B *: M.Out
+      def apply(a: A *: Tail): F[Out] =
+        MF.flatMap(C.apply(a.head))(bb => MF.map(M.apply(a.tail))(mOut => bb *: mOut))
+   }
+
+   </code></pre>
+  </section>
+
+       <!--Slide-->
+  <section data-transition="fade-out">
+    <h3>Instance for Mapper for all tuple</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+      extension[A <: Tuple](tuple: A) {
+        // Oh well? What defines the MapperF conceptually? 
+        // It is a list of functions (cases).
+        def traverse[F[_]](using M: MapperF[F, A]): F[M.Out] = M.apply(tuple)
+      }
+
+   </code></pre>
+  </section>
+
+
+         <!--Slide-->
+  <section data-transition="fade-out">
+    <h3>Bring in phantom type</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+      extension[A <: Tuple](tuple: A) {
+        def traverse[F[_]]: Traverse[F, A] = new Traverse[F, A](tuple)
+      }
+    
+      // Mapper[F[_], A] becomes Mapper[F[_], P, A] and Case[P, A, B]
+      // Define your instances of case in object of type B, and it works
+      class Traverse[F[_], A <: Tuple](tuple: A) {
+        def apply[P](p: P)(using M: MapperF[F, P, A]): F[M.Out] = M.apply(tuple)
+      }
+
+      // Demo (show tests)
+   </code></pre>
+  </section>
+
+  <section data-transition="fade-out">
+    <h3>A sequence revisited</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+      object identity {
+        given id[F[_], A]: Case.Aux[this.type, F[A], F[A]] = 
+          Case.createInstance(i => i)
+      }
+  
+      val tuple: (Option[Int], Option[Double]) = (Some(20), Some(50.1))
+      val result: Option[(Int, Double)] = tuple.traverse(identity)
+      // Demo (show tests)
+   </code></pre>
+  </section>
+
+  <section data-transition="fade-out">
+    <h3>A map revisited</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+      type Id[A] = A
+
+      object map {
+        given Case.Aux[this.type, Int, Int] = 
+          Case.createInstance(i => i * i)
+  
+        given Case.Aux[this.type, Double, Double] = 
+          Case.createInstance(i => i * i)
+      }
+  
+      val tuple: (Int, Double) = (20, 50.1)
+      val result: (Int, Double) = tuple.traverse[Id](map)
+      // Demo (show tests)
+   </code></pre>
+  </section>
+
+
+  <section data-transition="fade-out">
+    <h3>So far we covered</h3>
+    <pre><code class=" hljs sql" style="font-size:25px; align-items: center;"  data-line-numbers="6" data-trim data-noescape>
+      Type matching
+      Singleton types
+      Polymorphic Function Types
+      Type-class derivation using scala3 Tuple
+      Reimplementing some scala3 functions
+      Compile time Mirror
+      Type-class derivation revisited
+      Inline, and transparent
+      Macros
+   </code></pre>
+  </section>
+  
+  
+  <section data-transition="fade-out">
+    <h3>Mirror of Products</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+case class Abc(x: Int, y: String)
+
+implicitly[Mirror{type MirroredType = Abc}]
+
+Mirror.Product {
+  MirroredType = Abc
+  MirroedMonoType = Abc
+  MirroredLabel = "ISB"
+  MirroredElemTypes = (Int, String)
+  MirroedElemLabels = ("x", "y")
+
+}
+   </code></pre>
+  </section>
+
+  <section data-transition="fade-out">
+    <h3>Mirror of Coproducts</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+
+sealed trait Option[+A]
+case class Some[A](value: A) extends Option[A]
+case object None extends Option[Nothing]
+
+   </code></pre>
+  </section>
+  
+
+  <section data-transition="fade-out">
+    <h3>Mirror of Coproducts</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+implicitly[Mirror {type MirroredType = Option}]
+
+Mirror.Product {
+    MirroredType = Option
+    MirroredMonoType = Option[_]
+    MirroedLabel = "Option"
+    MirroredElemTypes = [+T] =>> (Sm[T], None.type)
+    MirroredElemLabels = ("Some", "None")
+}
+   </code></pre>
+  </section>
+
+  <section data-transition="fade-out">
+    <h3>Mirror of Coproducts</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+implicitly[Mirror {type MirroredType = Sm}]
+
+Mirror.Product {
+    MirroredType = Sm
+    MirroredMonoType = Sm[_]
+    MirroedLabel = "Sm"
+    MirroredElemTypes = [+T] =>> Tuple1[T]
+    MirroredElemLabels = Tuple1["value"]
+}
+
+   </code></pre>
+  </section>
+
+  <section data-transition="fade-out">
+    <h3>Mirror of Coproducts</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+implicitly[Mirror {type MirroredType = Sm}]
+
+Mirror.Product {
+    MirroredType = Sm
+    MirroredMonoType = Sm[_]
+    MirroedLabel = "Sm"
+    MirroredElemTypes = [+T] =>> Tuple1[T]
+    MirroredElemLabels = Tuple1["value"]
+}
+
+   </code></pre>
+  </section>
+
+
+  <section data-transition="fade-out">
+    <h3>Ok? So?...</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+// So, our `Generic` can be as simple as a type alias to Mirror
+
+type ProductGeneric[T] {
+  type Repr = MirroredElemTypes
+  def toRepr(t: T): Repr
+  def fromRepr(r: Repr): T
+}
+   </code></pre>
+  </section>
+
+  <section data-transition="fade-out">
+    <h3>Coproduct Generic</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+type CoproductGeneric[T] {
+  type Repr = ToUnion[MirroredElemeTypes] // type matching
+  def toRepr(t: T): Repr 
+  def fromRepr(r: Repr): T 
+}
+   </code></pre>
+</section>
+
+  <!-- Slide -->
+  <section data-transition="fade-out">
+    <h3>So far we covered</h3>
+    <pre><code class=" hljs sql" style="font-size:25px; align-items: center;"  data-line-numbers="7" data-trim data-noescape>
+      Type matching
+      Singleton types
+      Polymorphic Function Types
+      Type-class derivation using scala3 Tuple
+      Reimplementing some scala3 functions
+      Compile time Mirror
+      Type-class derivation revisited
+      Inline, and transparent
+      Macros
+   </code></pre>
+  </section>   
+
+<section data-transition="fade-out">
+  <h3>Here is a more closer-to-scala3 approach</h3>
+  <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+    // That works?
+    case class Abc(x: Int, y: Int) derives Show
+
+    object Show {
+      def derived[T](m: Mirror[T]): Show[T] = ???
+    }
+ </code></pre>
+</section>
+
+<section data-transition="fade-out">
+  <h3>Under the hood, the compiler does this:</h3>
+  <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+    // Caching the implicit instance +
+
+    object Abc extends Mirror.Product {
+      implicit val derivedShow: Show = Show.derived(Abc)
+    }
+
+ </code></pre>
+</section>
+
+  <!-- Slide -->
+  <section data-transition="fade-out">
+    <h3>So far we covered</h3>
+    <pre><code class=" hljs sql" style="font-size:25px; align-items: center;"  data-line-numbers="8" data-trim data-noescape>
+      Type matching
+      Singleton types
+      Polymorphic Function Types
+      Type-class derivation using scala3 Tuple
+      Reimplementing some scala3 functions
+      Compile time Mirror
+      Type-class derivation revisited
+      Inline, and transparent
+      Macros
+   </code></pre>
+  </section>  
+   
+  <section data-transition="fade-out">
+    <h3>Anything after inline, is inlined</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+      // If not, inline invoking is through a generated `getter` in parent object
+
+      val LoggingEnabled = true
+
+      // If not inline, `by-name` parameter allocation
+      def log(line: => String) = 
+        if (LoggingEnabled) println(line)
+  
+   </code></pre>
+  </section>
+
+  <section data-transition="fade-out">
+    <h3>Inline is inlined</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+      // If not, inline invoking is through a generated `getter` in parent object
+
+      inline val LoggingEnabled = true
+
+      // If not inline, `by-name` parameter allocation
+      def log(line: => String) = 
+        if (true) println(line)
+  
+   </code></pre>
+  </section>
+
+
+  <section data-transition="fade-out">
+    <h3>Inline is inlined</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+      // If not, inline invoking is through a generated `getter` in parent object
+
+      inline val LoggingEnabled = true
+
+      // scala compiler can optimise it to just
+      def log(line: => String) = 
+       println(line)
+  
+   </code></pre>
+  </section>
+
+
+  <section data-transition="fade-out">
+    <h3>Inline it further</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+      // If not, inline invoking is through a generated `getter` in parent object
+
+      inline val LoggingEnabled = true
+
+      // scala compiler can optimise it to just
+      inline def log(line: => String) = 
+       println(line)
+  
+   </code></pre>
+  </section>
+
+  <section data-transition="fade-out">
+    <h3>Inline it further</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+      // If not, inline invoking is through a generated `getter` in parent object
+
+      inline val LoggingEnabled = true
+
+      // scala compiler can optimise it to just
+       println(line)
+  
+   </code></pre>
+  </section>
+
+
+
+
+  <section data-transition="fade-out">
+    <h3>Inline recursive</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+      inline def pow(num: Float, exp: Int): Float = 
+      if(exp == 0) 1.0F else num * pow(num, exp - 1)
+     
+     pow(10.5F, 3) // Large amount of code thats known at compile time.
+     
+     pow(10.5F, 100) // Too much of code generation - that's going to bring a compile time error 
+  
+   </code></pre>
+  </section>
+
+
+  <section data-transition="fade-out">
+    <h3>Transparent Inline</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+      class Natural(v: Int) {
+        override def toString: String = v.toString
+      }
+      
+      object Natural:
+         transparent inline def apply(v: Int): Option[Natural]  = 
+           if (v > 0) Some(new Natural(v)) else None
+      end Natural
+  
+   </code></pre>
+  </section>
+
+  <section data-transition="fade-out">
+    <h3>So far we covered</h3>
+    <pre><code class=" hljs sql" style="font-size:25px; align-items: center;"  data-line-numbers="9" data-trim data-noescape>
+      Type matching
+      Singleton types
+      Polymorphic Function Types
+      Type-class derivation using scala3 Tuple
+      Reimplementing some scala3 functions
+      Compile time Mirror
+      Type-class derivation revisited
+      Inline, and transparent
+      Macros
+   </code></pre>
+  </section>
+  
+  <section data-transition="fade-out">
+    <h3>Macros - My thoughts</h3>
+    <p>Scala2 is so powerful - create code that has non-sensible types</p>
+    <p>Scala3 macros is better typed - the meaning of that code doesn't change through macros</p>
+    <p>These limitations are sensible to a great extent</p>
+    <p>API looks less scary</p>
+  </section>
+
+  <section data-transition="fade-out">
+    <h3>Inline + Transparent, and where is Macros?</h3>
+    Macro is a fusion of `inline`, and..
+  </section>
+
+  <section data-transition="fade-out">
+    <h3>And..</h3>
+    <p>Quoting and Splicing</p>
+    
+    <p>The new syntax for quoting is ${} </p>
+    <p>The syntax for splicing is $ ==> Reverse of Splice</p>
+  </section>
+
+
+  <section data-transition="fade-out">
+    <h3>And..</h3>
+    <p>Quoting and Splicing</p>
+    
+    <p>The new syntax for quoting is ${} </p>
+    <p>The syntax for splicing is $ ==> Reverse of Splice</p>
+  </section>
+
+
+  <section data-transition="fade-out">
+    <h3>'{} and $</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+      import scala.quotes._
+
+      val boolean: Boolean = true // a model of a scala expression that produces a boolean variable
+
+      val expr: Expr[Boolean] = '{ boolean } 
+      val a: Boolean = ${expr}
+      
+      // Expr[Boolean] exists at compile time
+
+      // As a user I see less Expr[Any] unlike Scala2
+
+   </code></pre>
+  </section>
+
+  <section data-transition="fade-out">
+    <h3>Easy to break phase inconsistency principle</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+       // We cannot quote an expr
+       // We can only splice an expr
+       quote(splice(expr)) = expr
+       splice(quote(value)) = value
+       splice(expr) != expr.value // or expr.valueOrError
+       // lifting a compile time computed value to an Expr
+       // Ithelps avoid phase inconsistency errors
+       Expr(value)
+       Expr(value) != '{value} 
+   </code></pre>
+  </section>
+
+
+  <section data-transition="fade-out">
+    <h3>Demo</h3>
+    <pre><code class=" hljs scala" style="font-size:25px; align-items: center;">
+      ...
+   </code></pre>
+  </section>
+
+      <section data-transition="fade-in">
+        <h3>Thank you all</h3>
+      </section>
+
+      <!-- Slide 20 -->
+    </div>
+  </div>
+
+  <script src="js/reveal.js"></script>
+
+  <script>
+    // More info about config & dependencies:
+    // - https://github.com/hakimel/reveal.js#configuration
+    // - https://github.com/hakimel/reveal.js#dependencies
+    Reveal.initialize({
+      // ...
+
+      // The "normal" size of the presentation, aspect ratio will be preserved
+      // when the presentation is scaled to fit different resolutions. Can be
+      // specified using percentage units.
+      width: 1300,
+      height: 750,
+
+      // Factor of the display size that should remain empty around the content
+      margin: 0.1,
+
+      // Bounds for smallest/largest possible scale to apply to content
+      minScale: 0.2,
+      maxScale: 1.5,
+      history: true,
+      dependencies: [
+        { src: 'plugin/markdown/marked.js' },
+        { src: 'plugin/markdown/markdown.js' },
+        { src: 'plugin/notes/notes.js', async: true },
+        { src: 'plugin/highlight/highlight.js', async: true },
+        { src: 'https://d3js.org/d3.v4.min.js' },
+        { src: 'plugin/d3js/d3js.js' }
+      ]
+    });
+  </script>
+</body>
+
+</html>
