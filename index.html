@@ -956,7 +956,7 @@ def factorial: Int => Int = y(almostFactorial)
                  def combine(a: (Int, String), b: Option[Structure]): Structure =
               
                  // path.next is Structure, and not child path.
-                  Cofree.cataM(parsed)(
+                  Cofree.cataM(res)(
                     (pos, path) =>
                       path.current match {
                         case Version(name, _) => combine((pos, name), path.next) 
@@ -968,14 +968,11 @@ def factorial: Int => Int = y(almostFactorial)
 
 
               <section data-transition="fade-out">
-                <h3>A simple naive string, looking just the same as before</h3>
+                <h3>Show path</h3>
                 <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim>
-                 type Structure = List[(Int, String)]
-                 val inclusion: Eval ~> cats.Id = _.value
-                 val res = parser("minor_version=3/run_time=1/abc.txt")
                  def combine[V](a: (V, Name), b: Option[String]): String = ???
               
-                 // path.next is Structure, and not child path.
+                 //  sounds silly, yet important - and its just same impl
                  Cofree.cataM[PathA, Id, Int, String](parsed)(
                   (_, fb) =>
                     fb.current match {
@@ -1064,15 +1061,112 @@ def mulToSquare(expr: Fix[Expr]): Fix[Expr] = expr.project match {
             <section data-transition="fade-out">
               <h3>Map it to your recursive database table</h3>
               <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim>
-
-def mulToSquare(expr: Fix[Expr]): Fix[Expr] = expr.project match {
-case Multiply(a, b) if (a == b) => Square(a)
-case other => other
-}
-      
+                // The database id, should that be in your model?
+                // A copy of Rob's (doobie author) talk
+                case class ProfF[A](name: String, age: Int, student: List[A])
+                type Prof = Fix[ProfF]
+                type ProfId = Cofree[Prof, Int]
+                      
              </code></pre>
             </section>
 
+            <section data-transition="fade-out">
+              <h3>Map it to your recursive database table</h3>
+              <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim>
+// insert children first 
+def insert(op: Option[Int], p: ProfF[_]): ConnectionIO[Int] =
+  tsql"""
+    INSERT INTO prof (parent, name, year)
+    VALUES ($op, ${p.name}, ${p.year})
+    RETURNING id
+  """.unique[Int]
+                      
+             </code></pre>
+            </section>
+
+            <section data-transition="fade-out">
+              <h3>Map it to your recursive database table </h3>
+              <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim>
+              def insertTree(fp: Fix[ProfF], op: Option[Int]): ConnectionIO[Cofree[ProfF, Int]] =
+                for {
+                  h <- insertNode(op, fp.unfix)           // ConnectionIO[Int]
+                  t <- fp.unfix                           // ProfF[Fix[ProfF]]
+                         .travere(insertTree(_, Some(h))) // ConnectionIO[ProfF[Cofree[ProfF, Int]]]
+                } yield Cofree(h, t)
+                      
+             </code></pre>
+            </section>
+
+
+            <section data-transition="fade-out">
+              <h3>Read it back </h3>
+              <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim>
+            def readNode(id: Int): ConnectionIO[ProfF[Int]] =
+              for {
+                d  <- tsql"SELECT name, year FROM prof WHERE id = $id".unique[(String, Int)]
+                ss <- tsql"SELECT id FROM prof WHERE parent = $id".as[List[Int]]
+              } yield ProfF(d._1, d._2, ss)
+                      
+             </code></pre>
+            </section>
+
+
+
+
+            <section data-transition="fade-out">
+              <h3>Read it back </h3>
+              <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim>
+           def readNode(id: Int): ConnectionIO[ProfF[Int]] =
+            for {
+              d  <- tsql"SELECT name, year FROM prof WHERE id = $id".unique[(String, Int)]
+              ss <- tsql"SELECT id FROM prof WHERE parent = $id".as[List[Int]]
+            } yield ProfF(d._1, d._2, ss)
+
+                // Wow, ProfF[A] had ProfF[Professor] amd ProfF[Int]
+                      
+             </code></pre>
+            </section>
+
+
+
+            <section data-transition="fade-out">
+              <h3>Read it back </h3>
+              <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim>
+def readNode2(id: Int): ConnectionIO[ProfF[ProfF[Int]]] =
+  readNode(id).flatMap(_.traverse(readNode))
+
+ def readTree(id: Int): ConnectionIO[Cofree[ProfF, Int]] =
+  readNode(id).flatMap { pi =>
+    pi.traverse(readTree)
+      .map(Cofree(id, _))
+  }
+             </code></pre>
+            </section>
+
+
+            <section data-transition="fade-out">
+              <h3>Is that recursion scheme ?</h3>
+              <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim>
+                // I think, not reaaally. But now I am hoping
+                // a few of you are motivated to learn a few technical terms that are the following
+                1. Catamorphism :: Algebra[F[_], A] => A // We already seen this, bottom up folding of structure
+                2. cataM type Algebra[F[_], A] = F[A] => M[A], wher M can be Either[String, *]
+                3. Anamorphism: top botton unfold
+                4. Paramorphism: SImilar to cata.
+                5. Ofcourse, get so used to Free, and Cofree
+
+             </code></pre>
+            </section>
+
+
+
+            <section data-transition="fade-out">
+              <h3>Interesting talks</h3>
+              <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim>
+                Hope you enough motivations to Read more on it....
+
+             </code></pre>
+            </section>
       <section data-transition="fade-in">
         <h3>Thank you all</h3>
       </section>
