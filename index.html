@@ -675,7 +675,8 @@ def factorial: Int => Int = y(almostFactorial)
                       val allParsers: List[Parser[Component]] =
                         List(getParser(partitionName)), 
                           getParser(versionName), getVersion(parseRunTime) ++ 
-                          subPartitionNames.map(getParser)    
+                          subPartitionNames.map(getParser)
+                        )    
                  </code></pre>
                 </section>
                 
@@ -945,10 +946,13 @@ def factorial: Int => Int = y(almostFactorial)
               </section>
 
               <section data-transition="fade-out">
-                <h3>In other words</h3>
+                <h3>Caution: Code heavy slides</h3>
                 <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim>
     
                  // We can apply morphisms over Fix and Cofree.
+
+                 // Code in upcoming slides is here.
+                 https://gist.github.com/afsalthaj/809650b4c6e895084110269a3ecb8702
 
                  
                </code></pre>
