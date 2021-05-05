@@ -1120,13 +1120,12 @@ def insert(op: Option[Int], p: ProfF[_]): ConnectionIO[Int] =
 
             <section data-transition="fade-out">
               <h3>Read it back </h3>
-              <li>Doing recursion at sql level is a choice for performance</li>
-              <li>But not all usecases need to take that risk</li>
-              <li>A recursion can be complex</li>
-              <li>Should be backed by compile time safety</li>
-              <li>Remove it from unsafe place, if performance concern is a lie</li>
+              <p>Doing recursion at sql level is a choice for performance</p>
+              <p>But not all usecases need to take that risk</p>
+              <p>A recursion can be complex</p>
+              <p>Should be backed by compile time safety</p>
+              <p>Remove it from unsafe place, if performance concern is a lie</p>
             </section>
-
 
 
             <section data-transition="fade-out">
@@ -1162,7 +1161,7 @@ def readNode2(id: Int): ConnectionIO[ProfF[ProfF[Int]]] =
 
             <section data-transition="fade-out">
               <h3>Is that recursion scheme ?</h3>
-              <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim>
+              <pre><code class=" hljs scala" style="font-size:25px; align-items: left;"  data-trim>
                 // I think, not reaaally. But now I am hoping,
                 // atleast a few of you are motivated. Now, its time to find the mechanics and make it working.
                 1. Catamorphism :: Algebra[F[_], A] => A // We already seen this, bottom up folding of structure
