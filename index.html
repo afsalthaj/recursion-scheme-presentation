@@ -687,7 +687,7 @@ def factorial: Int => Int = y(almostFactorial)
 
                   lazy val parser: Parser[Path] =
                     for {
-                      current <- list.combineAll
+                      current <- allParsers.combineAll
                       _       <- string("/")
                       next    <- opt(parser)
                   } yield SubPath(current, next)
@@ -925,7 +925,7 @@ def factorial: Int => Int = y(almostFactorial)
                 def parser: Parser[Cofree[PathA, Int]] =
                   for {
                     loc     <- pos
-                    current <- parsers.combineAll // Monoid of parser is `orElse`
+                    current <- allParsers.combineAll // Monoid of parser is `orElse`
                     _       <- string("/")
                     next    <- opt(parser)
                   } yield Cofree(loc, cats.Eval.now(PathA(current, next)))
@@ -946,7 +946,7 @@ def factorial: Int => Int = y(almostFactorial)
               </section>
 
               <section data-transition="fade-out">
-                <h3>Caution: Code heavy slides</h3>
+                <h3>Headsup: Code heavy slides</h3>
                 <pre><code class=" hljs scala" style="font-size:25px; align-items: center;"  data-trim>
     
                  // We can apply morphisms over Fix and Cofree.
