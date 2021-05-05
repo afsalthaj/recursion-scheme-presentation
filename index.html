@@ -964,7 +964,7 @@ def factorial: Int => Int = y(almostFactorial)
                  type Structure = List[(Int, String)]
                  val inclusion: Eval ~> cats.Id = _.value
                  val res = parser("minor_version=3/run_time=1/abc.txt")
-                 def combine(a: (Int, String), b: Option[Structure]): Structure =
+                 def combine(a: (Int, String), b: Option[Structure]): Structure = ???
               
                  // path.next is Structure, and not child path.
                   Cofree.cataM(res)(
